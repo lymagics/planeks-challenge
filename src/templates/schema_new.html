@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load crispy_forms_field %}
+
+{% block content %}
+<h3>New schema</h3>
+<div class="schema-form">
+  <form method="POST">
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-md-8">
+        {{ schema_form|crispy }}
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+    </div>
+    <h3>Schema columns</h3>
+    {{ column_formset.management_form }}
+    {% for form in column_formset.forms %}
+    <div id="column-forms">
+      <div id="form-1">
+        <div class="row">
+          <div class="col-md-9">
+            <div class="row">
+              {% for field in form %}
+              <div class="col-md-4">
+                {{ field|as_crispy_field }}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="delete">
+              <button type="button" class="btn btn-outline-danger" onclick="removeColumn('form-1')">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    <div class="schema-form-footer">
+      <div class="card">
+        <div class="card-body">
+          <button class="btn btn-primary" type="button" onclick="addColumn()">
+            Add column
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock content %}
+
+{% block javascript %}
+<script>
+  let columnForms = document.getElementById('column-forms');
+  let totalForms = document.getElementById('id_columns-TOTAL_FORMS');
+
+  const addColumn = () => {
+    const newFormHTML = `
+    <div id="form-__prefix__">
+    <div class="row">
+        <div class="col-md-9">
+          <div class="row">
+            {% for field in column_formset.empty_form %}
+            <div class="col-md-4">
+              {{ field|as_crispy_field }}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="delete">
+            <button type="button" class="btn btn-outline-danger" onclick="removeColumn('form-__prefix__')">Remove</button>
+          </div>
+        </div>
+      </div>
+      </div>
+    `;
+
+    const newForm = document.createElement('div');
+    newForm.innerHTML = newFormHTML.replaceAll('__prefix__', totalForms.value);
+
+    columnForms.appendChild(newForm);
+    totalForms.value = parseInt(totalForms.value) + 1;
+  };
+
+  const removeColumn = (element_id) => {
+    const element = document.getElementById(element_id);
+    element.parentNode.removeChild(element);
+  };
+
+</script>
+{% endblock javascript %}

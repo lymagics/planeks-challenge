@@ -1,0 +1,36 @@
+.content {
+    margin-top: 10px;
+}
+
+.content a {
+    text-decoration: none;
+}
+
+.center-form {
+    margin-left: 25%;
+    margin-top: 10%;
+}
+
+.login-form h1 {
+    text-align: center;
+}
+
+.login-form button, .schema-form button, .schema-list a {
+    float: right;
+}
+
+.schema-form-footer button, .schemas-table a, .delete button {
+    float: left;
+}
+
+.schema-form-footer {
+    margin-bottom: 10px;
+}
+
+.schema-list {
+    margin-top: 10px;
+}
+
+.delete {
+    padding-top: 30px;
+}

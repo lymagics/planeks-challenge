@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<form method="POST">
+  {% csrf_token %}
+  <div class="alert alert-danger" role="alert">
+    Are you sure you want to delete {{ schema.name }}?
+  </div>
+  <button type="submit" class="btn btn-danger">Confirm</button>
+</form>
+{% endblock content %}

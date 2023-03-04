@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-3">
+    <h3>{{ schema.name }} schema</h3>
+  </div>
+  <div class="col-md-4" style="margin-top: 5px;">
+    <a href="{% url 'schema_update' pk=schema.pk %}">Edit schema</a>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-9">
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Column name</th>
+          <th scope="col">Column type</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for column in schema.columns.all %}
+        <tr>
+          <th scope="row">{{ column.order }}</th>
+          <td>{{ column.name }}</td>
+          <td>{{ column.datatype }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div id="generate-page">
+  <div class="row">
+    <div class="col-md-6">
+      <h3>Data sets</h3>
+    </div>
+    <div class="col-md-6">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="d-flex justify-content-end">
+            Rows:
+          </div>
+        </div>
+        <div class="col-md-4">
+          <input type="text" id="total" class="form-control" />
+        </div>
+        <div class="col-md-4">
+          <button type="button" id="add-button" class="btn btn-success">
+            Generate data
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Created</th>
+            <th scope="col">Status</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="dataset-list">
+          <div id="dataset-list2">
+            {% for dataset in schema.datasets.all %}
+              <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ dataset.created_at|date:"Y-m-d" }}</td>
+                <td>
+                  {% if dataset.status.state == 'Success' %}
+                    <span class="badge text-bg-success">Ready</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">Processing</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if dataset.status.state == 'Success' %}
+                    <a href="{% url 'dataset_download' pk=dataset.pk %}">Download</a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </div>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block javascript %}
+  <script type="module">
+    import Cookies from 'https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/+esm';
+
+    const schemaId = `{{ schema.pk }}`;
+    const csrf_token = Cookies.get('csrftoken');
+    const total = document.getElementById('total');
+    const addButton = document.getElementById('add-button');
+    const datasetList = document.getElementById('dataset-list');
+
+    const createDataset = () => {
+      const newDataset = document.createElement('tr');
+      const th = document.createElement('th');
+      th.innerHTML = datasetList.childElementCount + 1;
+      th.setAttribute('scope', 'row');
+
+      const createdAt = document.createElement('td');
+      createdAt.innerHTML = new Date().toISOString().slice(0, 10);
+
+      const status = document.createElement('td');
+      status.innerHTML = '<span class="badge text-bg-secondary">Processing</span>';
+
+      const action = document.createElement('td');
+
+      newDataset.appendChild(th);
+      newDataset.appendChild(createdAt);
+      newDataset.appendChild(status);
+      newDataset.appendChild(action);
+
+      return [newDataset, action, status];
+    }
+
+    const onClick = async (ev) => {
+      ev.preventDefault();
+      if(total.value) {
+        const [newDataset, action, status] = createDataset();
+        datasetList.appendChild(newDataset);
+        let totalRows = total.value;
+        total.value = '';
+
+        const response = await fetch('/api/schemas/' + schemaId + '/', {
+          method: 'POST',
+          body: JSON.stringify({total: totalRows}),
+          credentials: 'same-origin',
+          headers: {
+            'X-CSRFToken': csrf_token
+          }
+        });
+
+        if(response.ok) {
+          const data = await response.json();
+          status.innerHTML = '<span class="badge text-bg-success">Ready</span>';
+          action.innerHTML = `<a href="${data.download_link}">Download</a>`;
+        }
+      }
+    };
+
+    addButton.addEventListener('click', (ev) => {
+      onClick(ev);
+    });
+
+  </script>
+{% endblock javascript %}
