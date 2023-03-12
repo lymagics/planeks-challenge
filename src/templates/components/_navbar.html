@@ -8,11 +8,11 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="{% url 'schema_list' %}">Schemas</a>
+          <a class="nav-link active" aria-current="page" href="{% url 'schemas:list' %}">Schemas</a>
         </li>
       </ul>
     </div>
     Hello, {{ user.username }}&nbsp;&nbsp;
-    <a class="nav-link active" href="{% url 'logout' %}">Logout</a>
+    <a class="nav-link active" href="{% url 'auth:logout' %}">Logout</a>
   </div>
 </nav>

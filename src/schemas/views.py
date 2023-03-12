@@ -2,67 +2,52 @@ from django.http import HttpRequest, FileResponse
 from django.views.generic import DetailView, ListView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy
 
-from .forms import SchemaForm, ColumnFormSet, ColumnUpdateFormSet
+from extra_views import NamedFormsetsMixin, CreateWithInlinesView, UpdateWithInlinesView
+
+from .forms import ColumnInline
 from .models import Schema, DataSet
+from .mixins import SchemaFormMixin
 
 
-@login_required
-def create_schema(request: HttpRequest):
+class SchemaCreateView(LoginRequiredMixin, SchemaFormMixin, 
+                       NamedFormsetsMixin, CreateWithInlinesView):
     """
-    View for creating a new schema.
-    """
-
-    if request.method == 'POST':
-        schema_form = SchemaForm(request.POST)
-        column_formset = ColumnFormSet(request.POST)
-
-        if schema_form.is_valid() and column_formset.is_valid():
-            schema = schema_form.save()
-            column_formset.instance = schema
-            column_formset.save()
-            return redirect('schema_detail', pk=schema.pk)
-
-    else:
-        schema_form = SchemaForm()
-        column_formset = ColumnFormSet()
-
-    return render(request, 'schema_new.html', {'schema_form': schema_form, 'column_formset': column_formset})
-
-
-@login_required
-def update_schema(request: HttpRequest, pk: int):
-    """
-    View for updating an existing schema.
+    Create new schema.
     """
 
-    schema = get_object_or_404(Schema, pk=pk)
+    model = Schema
+    inlines = (ColumnInline,)
+    inlines_names = ('columns',)
+    fields = ('name',)
+    template_name = 'schema_form.html'
+    page_header = 'New schema'
+    page_button = 'Create'
 
-    if request.method == 'POST':
-        schema_form = SchemaForm(request.POST, instance=schema)
-        column_formset = ColumnUpdateFormSet(request.POST, instance=schema)
 
-        if schema_form.is_valid() and column_formset.is_valid():
-            schema = schema_form.save()
-            column_formset.save()
-            return redirect('schema_detail', pk=schema.pk)
+class SchemaUpdateView(LoginRequiredMixin, SchemaFormMixin, 
+                       NamedFormsetsMixin, UpdateWithInlinesView):
+    """
+    Update an existing schema.
+    """
 
-    else:
-        schema_form = SchemaForm(instance=schema)
-        column_formset = ColumnUpdateFormSet(instance=schema)
+    model = Schema
+    inlines = (ColumnInline,)
+    inlines_names = ('columns',)
+    fields = ('name',)
+    template_name = 'schema_form.html'
+    page_button = 'Save'
 
-    return render(request, 'schema_update.html', {
-        'schema': schema,
-        'schema_form': schema_form,
-        'column_formset': column_formset,
-    })
+    @property
+    def page_header(self):
+        return self.get_object().name
 
 
 class SchemaDetailView(LoginRequiredMixin, DetailView):
     """
-    View for displaying details of a schema.
+    Display details of a schema.
     """
 
     model = Schema
@@ -71,7 +56,7 @@ class SchemaDetailView(LoginRequiredMixin, DetailView):
 
 class SchemaListView(LoginRequiredMixin, ListView):
     """
-    View for listing all schemas.
+    List all schemas.
     """
 
     model = Schema
@@ -80,22 +65,20 @@ class SchemaListView(LoginRequiredMixin, ListView):
 
 class SchemaDeleteView(LoginRequiredMixin, DeleteView):
     """
-    View for deleting an existing schema.
+    Delete an existing schema.
     """
 
     model = Schema
     template_name = 'schema_delete.html'
-    success_url = reverse_lazy('schema_list')
+    success_url = reverse_lazy('schemas:list')
 
 
 @login_required
 def download_dataset(request: HttpRequest, pk: int):
     """
-    View for downloading an existing csv dataset.
+    Download an existing csv dataset.
     """
 
     dataset = get_object_or_404(DataSet, pk=pk)
-
-    csv_file = open(dataset.path, 'rb')
-
+    csv_file = dataset.csv_file.file
     return FileResponse(csv_file, as_attachment=True)

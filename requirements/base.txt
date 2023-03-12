@@ -4,3 +4,6 @@ psycopg2-binary==2.9.5
 crispy-bootstrap5==0.7
 Faker==17.5.0
 whitenoise==6.4.0
+django-extra-views==0.14.0
+django-storages==1.13.2
+boto3==1.26.89

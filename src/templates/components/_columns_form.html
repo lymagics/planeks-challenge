@@ -1,0 +1,14 @@
+{% load crispy_forms_tags %}
+{% load crispy_forms_field %}
+
+<script>
+  const newFormHTML = `
+    <div class="row">
+      {% for field in columns.empty_form %}
+        <div class="col-md-3">
+          {{ field|as_crispy_field }}
+        </div>
+      {% endfor %}
+    </div>
+  `;
+</script>

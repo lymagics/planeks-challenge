@@ -1,8 +1,9 @@
 import os
 import csv
+from io import StringIO
 from uuid import uuid4
 
-from django.conf import settings
+from django.core.files.base import ContentFile
 
 from faker import Faker
 
@@ -28,21 +29,32 @@ def generate_fake_data(datatype: str):
     return data_generators[datatype]()
 
 
-def generate_csv(dataset, total):
+def generate_csv(dataset, total) -> ContentFile:
     """
     Generate csv file with number of rows equal to total.
     """
 
-    csv_name = f'{uuid4()}.csv'
-    csv_path = os.path.join(settings.MEDIA_ROOT, csv_name)
     header = ['id'] + [column.name for column in dataset.schema.columns.all()]
 
-    with open(csv_path, 'wt') as f:
-        csv_writer = csv.writer(f)
-        csv_writer.writerow(header)
+    csv_buffer = StringIO()
+    csv_writer = csv.writer(csv_buffer)
 
-        for count in range(1, total + 1):
-            row = [str(count)] + [column.generate_fake_value() for column in dataset.schema.columns.all()]
-            csv_writer.writerow(row)
+    header = ['id'] + [column.name for column in dataset.schema.columns.all()]
+    csv_writer.writerow(header)
 
-    return csv_path
+    for count in range(1, total + 1):
+        row = [str(count)] + [column.generate_fake_value() for column in dataset.schema.columns.all()]
+        csv_writer.writerow(row)
+
+    csv_file = ContentFile(csv_buffer.getvalue().encode())
+
+    return csv_file
+
+
+def get_random_name(prefix) -> str:
+    """
+    Generate random file name.
+    """
+
+    csv_name = f'{uuid4()}.csv'
+    return os.path.join(prefix, csv_name)

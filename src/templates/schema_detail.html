@@ -6,7 +6,7 @@
     <h3>{{ schema.name }} schema</h3>
   </div>
   <div class="col-md-4" style="margin-top: 5px;">
-    <a href="{% url 'schema_update' pk=schema.pk %}">Edit schema</a>
+    <a href="{% url 'schemas:edit' pk=schema.pk %}">Edit schema</a>
   </div>
 </div>
 <div class="row">
@@ -72,15 +72,15 @@
                 <th scope="row">{{ forloop.counter }}</th>
                 <td>{{ dataset.created_at|date:"Y-m-d" }}</td>
                 <td>
-                  {% if dataset.status.state == 'Success' %}
+                  {% if dataset.csv_file.url %}
                     <span class="badge text-bg-success">Ready</span>
                   {% else %}
                     <span class="badge text-bg-secondary">Processing</span>
                   {% endif %}
                 </td>
                 <td>
-                  {% if dataset.status.state == 'Success' %}
-                    <a href="{% url 'dataset_download' pk=dataset.pk %}">Download</a>
+                  {% if dataset.csv_file.url %}
+                    <a href="{% url 'schemas:download' pk=dataset.pk %}">Download</a>
                   {% endif %}
                 </td>
               </tr>

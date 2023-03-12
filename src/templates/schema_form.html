@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load crispy_forms_field %}
+
+{% block content %}
+  <h3>{{ page_header }}</h3>
+  <form method="POST">
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-md-8">
+        {{ form|crispy }}
+      </div>
+      <div class="col-md-4">
+        <button type="submit" class="btn btn-primary">{{ page_button }}</button>
+      </div>
+    </div>
+    <h4>Schema columns</h4>
+    {{ columns.management_form }}
+    <div id="columns-forms">
+      {% for form in columns %}
+        <div class="row">
+          {% for field in form %}
+            <div class="col-md-3">
+              {{ field|as_crispy_field }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="row mt-3">
+      <div class="card">
+        <div class="card-body">
+          <button class="btn btn-primary" type="button" onclick="addColumn()">
+            Add column
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+{% endblock content %}
+
+{% block javascript %}
+  {% include 'components/_columns_form.html' %}
+  <script>
+    let columnForms = document.getElementById('columns-forms');
+    let totalForms = document.getElementById('id_columns-TOTAL_FORMS');
+
+    const addColumn = () => {
+      const newForm = document.createElement('div');
+      newForm.innerHTML = newFormHTML.replaceAll('__prefix__', totalForms.value);
+
+      columnForms.appendChild(newForm);
+      totalForms.value = parseInt(totalForms.value) + 1;
+    };
+  </script>
+{% endblock javascript %}
